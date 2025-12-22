@@ -1,5 +1,7 @@
 # browser-cdp
 
+[![npm version](https://img.shields.io/npm/v/browser-cdp.svg)](https://www.npmjs.com/package/browser-cdp)
+
 Browser automation via Chrome DevTools Protocol. Control Chrome, Brave, or Edge using your real browser - same fingerprint, real cookies, no automation detection.
 
 ## Install

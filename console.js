@@ -7,16 +7,19 @@ const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
 const args = process.argv.slice(2);
 const duration = args.find((a) => a.startsWith("--duration="));
 const durationMs = duration ? parseInt(duration.split("=")[1]) * 1000 : null;
+const shouldReload = args.includes("--reload") || args.includes("-r");
 const showHelp = args.includes("--help") || args.includes("-h");
 
 if (showHelp) {
-  console.log("Usage: console.js [--duration=SECONDS]");
+  console.log("Usage: console.js [options]");
   console.log("\nCapture browser console output in real-time.");
   console.log("\nOptions:");
   console.log("  --duration=N  Stop after N seconds (default: run until Ctrl+C)");
+  console.log("  --reload, -r  Reload the page before capturing");
   console.log("\nExamples:");
   console.log("  console.js              # Stream console logs until Ctrl+C");
   console.log("  console.js --duration=5 # Capture for 5 seconds");
+  console.log("  console.js --reload     # Reload page and capture logs");
   process.exit(0);
 }
 
@@ -92,6 +95,11 @@ page.on("console", (msg) => {
 page.on("pageerror", (error) => {
   console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${reset}`);
 });
+
+if (shouldReload) {
+  console.error("Reloading page...");
+  await page.reload();
+}
 
 console.error(`Listening for console output... (Ctrl+C to stop)`);
 

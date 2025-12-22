@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2025-12-22
+
+### Added
+
+- `--reload` / `-r` flag for `console` command - Reload page before capturing console output
+- npm version badge in README
+
 ## [0.5.0] - 2025-12-21
 
 ### Added
