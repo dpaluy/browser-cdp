@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 
 import { chromium } from "playwright";
-
-const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
+import { DEFAULT_PORT, getActivePage, formatTime, levelColors, resetColor } from "./utils.js";
 
 const args = process.argv.slice(2);
 const showHelp = args.includes("--help") || args.includes("-h");
 const captureConsole = args.includes("--console");
 const durationArg = args.find((a) => a.startsWith("--duration="));
 const durationMs = durationArg ? parseInt(durationArg.split("=")[1]) * 1000 : 3000;
-
-// Get code (everything that's not a flag)
 const code = args.filter((a) => !a.startsWith("--")).join(" ");
 
 if (showHelp || !code) {
@@ -35,29 +32,14 @@ if (!context) {
 }
 
 const pages = context.pages();
-// Filter out devtools pages and pick a real page
-const realPages = pages.filter(p => {
-  const url = p.url();
-  return url.startsWith("http://") || url.startsWith("https://");
-});
-const page = realPages[realPages.length - 1] || pages[pages.length - 1];
+const page = getActivePage(pages);
 
 if (!page) {
   console.error("No active tab found");
   process.exit(1);
 }
 
-// Set up console capture BEFORE evaluation
 if (captureConsole) {
-  const formatTime = () => new Date().toISOString().split("T")[1].slice(0, 12);
-  const levelColors = {
-    verbose: "\x1b[90m",
-    info: "\x1b[36m",
-    warning: "\x1b[33m",
-    error: "\x1b[31m",
-  };
-  const reset = "\x1b[0m";
-
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Log.enable");
   await cdp.send("Runtime.enable");
@@ -66,30 +48,30 @@ if (captureConsole) {
   cdp.on("Log.entryAdded", ({ entry }) => {
     const color = levelColors[entry.level] || levelColors.info;
     const source = entry.source ? `[${entry.source}]` : "";
-    console.log(`${color}[${formatTime()}] [${entry.level.toUpperCase()}]${source} ${entry.text}${reset}`);
+    console.log(`${color}[${formatTime()}] [${entry.level.toUpperCase()}]${source} ${entry.text}${resetColor}`);
     if (entry.url) {
-      console.log(`${color}    URL: ${entry.url}${reset}`);
+      console.log(`${color}    URL: ${entry.url}${resetColor}`);
     }
   });
 
   cdp.on("Runtime.exceptionThrown", ({ exceptionDetails }) => {
     const text = exceptionDetails.exception?.description || exceptionDetails.text;
-    console.log(`\x1b[31m[${formatTime()}] [EXCEPTION] ${text}${reset}`);
+    console.log(`\x1b[31m[${formatTime()}] [EXCEPTION] ${text}${resetColor}`);
   });
 
   cdp.on("Network.loadingFailed", ({ requestId, errorText, blockedReason }) => {
     const reason = blockedReason ? ` (${blockedReason})` : "";
-    console.log(`\x1b[31m[${formatTime()}] [NETWORK ERROR] ${errorText}${reason}${reset}`);
+    console.log(`\x1b[31m[${formatTime()}] [NETWORK ERROR] ${errorText}${reason}${resetColor}`);
   });
 
   page.on("console", (msg) => {
     const type = msg.type();
     const color = levelColors[type] || levelColors.info;
-    console.log(`${color}[${formatTime()}] [CONSOLE.${type.toUpperCase()}] ${msg.text()}${reset}`);
+    console.log(`${color}[${formatTime()}] [CONSOLE.${type.toUpperCase()}] ${msg.text()}${resetColor}`);
   });
 
   page.on("pageerror", (error) => {
-    console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${reset}`);
+    console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${resetColor}`);
   });
 }
 
@@ -107,7 +89,6 @@ try {
   process.exit(1);
 }
 
-// Print result
 if (Array.isArray(result)) {
   for (let i = 0; i < result.length; i++) {
     if (i > 0) console.log("");
@@ -123,7 +104,6 @@ if (Array.isArray(result)) {
   console.log(result);
 }
 
-// Wait for async console output
 if (captureConsole) {
   console.error(`\nListening for ${durationMs / 1000}s...`);
   await new Promise((r) => setTimeout(r, durationMs));

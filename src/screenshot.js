@@ -3,8 +3,7 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright";
-
-const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
+import { DEFAULT_PORT, getActivePage } from "./utils.js";
 
 const browser = await chromium.connectOverCDP(`http://localhost:${DEFAULT_PORT}`);
 const contexts = browser.contexts();
@@ -16,12 +15,7 @@ if (!context) {
 }
 
 const pages = context.pages();
-// Filter out devtools pages and pick a real page
-const realPages = pages.filter(p => {
-  const url = p.url();
-  return url.startsWith("http://") || url.startsWith("https://");
-});
-const page = realPages[realPages.length - 1] || pages[pages.length - 1];
+const page = getActivePage(pages);
 
 if (!page) {
   console.error("No active tab found");

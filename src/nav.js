@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { chromium } from "playwright";
-
-const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
+import { DEFAULT_PORT, normalizeUrl, getActivePage, formatTime, levelColors, resetColor } from "./utils.js";
 
 const args = process.argv.slice(2);
 const showHelp = args.includes("--help") || args.includes("-h");
@@ -27,10 +26,7 @@ if (showHelp || !url) {
   process.exit(showHelp ? 0 : 1);
 }
 
-// Add protocol if missing
-if (!url.match(/^https?:\/\//i)) {
-  url = "https://" + url;
-}
+url = normalizeUrl(url);
 
 const browser = await chromium.connectOverCDP(`http://localhost:${DEFAULT_PORT}`);
 const contexts = browser.contexts();
@@ -48,17 +44,7 @@ if (newTab) {
   page = realPages[realPages.length - 1] || pages[pages.length - 1] || await context.newPage();
 }
 
-// Set up console capture BEFORE navigation
 if (captureConsole) {
-  const formatTime = () => new Date().toISOString().split("T")[1].slice(0, 12);
-  const levelColors = {
-    verbose: "\x1b[90m",
-    info: "\x1b[36m",
-    warning: "\x1b[33m",
-    error: "\x1b[31m",
-  };
-  const reset = "\x1b[0m";
-
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Log.enable");
   await cdp.send("Runtime.enable");
@@ -67,30 +53,30 @@ if (captureConsole) {
   cdp.on("Log.entryAdded", ({ entry }) => {
     const color = levelColors[entry.level] || levelColors.info;
     const source = entry.source ? `[${entry.source}]` : "";
-    console.log(`${color}[${formatTime()}] [${entry.level.toUpperCase()}]${source} ${entry.text}${reset}`);
+    console.log(`${color}[${formatTime()}] [${entry.level.toUpperCase()}]${source} ${entry.text}${resetColor}`);
     if (entry.url) {
-      console.log(`${color}    URL: ${entry.url}${reset}`);
+      console.log(`${color}    URL: ${entry.url}${resetColor}`);
     }
   });
 
   cdp.on("Runtime.exceptionThrown", ({ exceptionDetails }) => {
     const text = exceptionDetails.exception?.description || exceptionDetails.text;
-    console.log(`\x1b[31m[${formatTime()}] [EXCEPTION] ${text}${reset}`);
+    console.log(`\x1b[31m[${formatTime()}] [EXCEPTION] ${text}${resetColor}`);
   });
 
   cdp.on("Network.loadingFailed", ({ requestId, errorText, blockedReason }) => {
     const reason = blockedReason ? ` (${blockedReason})` : "";
-    console.log(`\x1b[31m[${formatTime()}] [NETWORK ERROR] ${errorText}${reason}${reset}`);
+    console.log(`\x1b[31m[${formatTime()}] [NETWORK ERROR] ${errorText}${reason}${resetColor}`);
   });
 
   page.on("console", (msg) => {
     const type = msg.type();
     const color = levelColors[type] || levelColors.info;
-    console.log(`${color}[${formatTime()}] [CONSOLE.${type.toUpperCase()}] ${msg.text()}${reset}`);
+    console.log(`${color}[${formatTime()}] [CONSOLE.${type.toUpperCase()}] ${msg.text()}${resetColor}`);
   });
 
   page.on("pageerror", (error) => {
-    console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${reset}`);
+    console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${resetColor}`);
   });
 
   console.error(`Navigating to ${url} (capturing console for ${durationMs / 1000}s)...`);
