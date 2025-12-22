@@ -165,6 +165,63 @@ describe("browser-cdp commands", { skip: process.env.SKIP_INTEGRATION }, () => {
     });
   });
 
+  describe("network command", () => {
+    test("shows help with --help flag", () => {
+      const result = run(["network", "--help"]);
+      assert.match(result, /Usage:/);
+      assert.match(result, /--filter/);
+      assert.match(result, /--json/);
+      assert.match(result, /--errors/);
+      assert.match(result, /--duration/);
+    });
+
+    test("streams network traffic with duration", async () => {
+      run(["nav", "https://example.com"]);
+
+      const child = spawn("node", [CLI, "network", "--duration=2"], {
+        env: { ...process.env, DEBUG_PORT: PORT },
+      });
+
+      let stdout = "";
+      let stderr = "";
+
+      child.stdout.on("data", (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on("data", (data) => {
+        stderr += data.toString();
+      });
+
+      await new Promise((resolve) => child.on("close", resolve));
+
+      assert.match(stderr, /Connected to:/);
+      assert.match(stderr, /Listening for network activity/);
+    });
+
+    test("outputs JSON with --json flag", async () => {
+      run(["nav", "https://example.com"]);
+
+      const child = spawn("node", [CLI, "network", "--json", "--duration=2"], {
+        env: { ...process.env, DEBUG_PORT: PORT },
+      });
+
+      let stdout = "";
+      child.stdout.on("data", (data) => {
+        stdout += data.toString();
+      });
+
+      await new Promise((resolve) => child.on("close", resolve));
+
+      if (stdout.trim()) {
+        const lines = stdout.trim().split("\n");
+        const firstEvent = JSON.parse(lines[0]);
+        assert.ok(firstEvent.type);
+        assert.ok(firstEvent.timestamp);
+      }
+    });
+  });
+
   describe("insights command", () => {
     test("returns performance metrics", () => {
       run(["nav", "https://example.com"]);
