@@ -37,6 +37,9 @@ browser-cdp pick '<message>'
 # Stream browser console output (network errors, exceptions, logs)
 browser-cdp console [--duration=SECONDS]
 
+# Stream network requests/responses
+browser-cdp network [--filter=PATTERN] [--json] [--errors] [--duration=SECONDS]
+
 # Show page performance metrics
 browser-cdp insights [--json]
 
@@ -88,6 +91,19 @@ browser-cdp console
 
 # Stream console for 10 seconds
 browser-cdp console --duration=10
+
+# Stream network traffic
+browser-cdp network
+# Then navigate to see requests
+
+# Filter to API calls only
+browser-cdp network --filter=api
+
+# Only show failed requests (4xx/5xx)
+browser-cdp network --errors
+
+# JSON output for parsing
+browser-cdp network --json --duration=5 | jq '.url'
 
 # Get page performance insights
 browser-cdp insights

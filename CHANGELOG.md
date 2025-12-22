@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.2] - 2025-12-22
+
+### Added
+
+- `network` command - Stream network requests and responses in real-time
+  - `--filter=<pattern>` option to filter URLs by regex pattern
+  - `--json` flag for JSON output (useful for piping to jq)
+  - `--errors` flag to only show failed requests (4xx/5xx status codes)
+  - `--duration=N` option to auto-stop after N seconds
+  - Color-coded output: cyan (requests), green (2xx), yellow (3xx), red (4xx/5xx)
+
 ## [0.6.1] - 2025-12-22
 
 ### Added

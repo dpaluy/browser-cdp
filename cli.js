@@ -20,6 +20,7 @@ const commands = {
   pdf: "./src/pdf.js",
   pick: "./src/pick.js",
   console: "./src/console.js",
+  network: "./src/network.js",
   insights: "./src/insights.js",
   lighthouse: "./src/lighthouse.js",
 };
@@ -39,6 +40,7 @@ function printUsage() {
   console.log("  pdf                 Export current page as PDF");
   console.log("  pick '<message>'    Interactive element picker");
   console.log("  console             Stream browser console output");
+  console.log("  network             Stream network requests/responses");
   console.log("  insights            Show page performance metrics");
   console.log("  lighthouse          Run Lighthouse audit");
   console.log("");
@@ -53,6 +55,7 @@ function printUsage() {
   console.log("  browser-cdp eval 'document.title'");
   console.log("  browser-cdp dom > page.html");
   console.log("  browser-cdp console --duration=10");
+  console.log("  browser-cdp network --filter=api");
   console.log("  browser-cdp insights --json");
   process.exit(0);
 }
