@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8"));
+
 const command = process.argv[2];
 const args = process.argv.slice(3);
 
@@ -12,7 +19,7 @@ const commands = {
 };
 
 function printUsage() {
-  console.log("browser-cdp - Browser automation via Chrome DevTools Protocol");
+  console.log(`browser-cdp v${pkg.version} - Browser automation via Chrome DevTools Protocol`);
   console.log("");
   console.log("Usage: browser-cdp <command> [options]");
   console.log("");
@@ -33,6 +40,11 @@ function printUsage() {
   console.log("  browser-cdp nav https://google.com");
   console.log("  browser-cdp eval 'document.title'");
   console.log("  browser-cdp screenshot");
+  process.exit(0);
+}
+
+if (command === "--version" || command === "-v") {
+  console.log(pkg.version);
   process.exit(0);
 }
 
