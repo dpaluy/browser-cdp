@@ -30,12 +30,6 @@ const BROWSERS = {
       ? `${process.env.HOME}/Library/Application Support/BraveSoftware/Brave-Browser/`
       : `${process.env.HOME}/.config/BraveSoftware/Brave-Browser/`,
   },
-  comet: {
-    name: "Comet",
-    path: isMac ? "/Applications/Comet.app/Contents/MacOS/Comet" : "/usr/bin/comet",
-    process: "Comet",
-    profileSource: null,
-  },
   edge: {
     name: "Microsoft Edge",
     path: isMac
@@ -55,19 +49,18 @@ function printUsage() {
   console.log("\nBrowsers:");
   console.log("  chrome  - Google Chrome (default)");
   console.log("  brave   - Brave Browser");
-  console.log("  comet   - Comet Browser");
   console.log("  edge    - Microsoft Edge");
   console.log("\nOptions:");
   console.log("  --isolated  Use isolated profile (default: real profile)");
   console.log("  --port=N    Use custom debugging port (default: 9222)");
   console.log("\nEnvironment variables:");
-  console.log("  BROWSER       Default browser (chrome, brave, comet, edge)");
+  console.log("  BROWSER       Default browser (chrome, brave, edge)");
   console.log("  BROWSER_PATH  Custom browser executable path");
   console.log("  DEBUG_PORT    Custom debugging port");
   console.log("\nExamples:");
   console.log("  start.js                    # Start Chrome with real profile");
   console.log("  start.js brave              # Start Brave with real profile");
-  console.log("  start.js comet --isolated   # Start Comet with isolated profile");
+  console.log("  start.js edge --isolated    # Start Edge with isolated profile");
   console.log("  start.js --port=9333        # Start Chrome on port 9333");
   process.exit(1);
 }

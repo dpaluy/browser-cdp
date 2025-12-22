@@ -1,7 +1,7 @@
 {
   "name": "browser-cdp",
-  "version": "0.2.1",
-  "description": "Browser automation via Chrome DevTools Protocol - control Chrome, Brave, Comet, Edge with real browser profiles",
+  "version": "0.3.0",
+  "description": "Browser automation via Chrome DevTools Protocol - control Chrome, Brave, Edge with real browser profiles",
   "type": "module",
   "bin": {
     "browser-cdp": "./cli.js"
@@ -16,6 +16,8 @@
     "eval.js",
     "screenshot.js",
     "pick.js",
+    "console.js",
+    "insights.js",
     "README.md",
     "LICENSE"
   ],

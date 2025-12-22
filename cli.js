@@ -16,6 +16,8 @@ const commands = {
   eval: "./eval.js",
   screenshot: "./screenshot.js",
   pick: "./pick.js",
+  console: "./console.js",
+  insights: "./insights.js",
 };
 
 function printUsage() {
@@ -29,17 +31,20 @@ function printUsage() {
   console.log("  eval '<code>'       Evaluate JavaScript in page");
   console.log("  screenshot          Take screenshot of current page");
   console.log("  pick '<message>'    Interactive element picker");
+  console.log("  console             Stream browser console output");
+  console.log("  insights            Show page performance metrics");
   console.log("");
   console.log("Environment:");
   console.log("  DEBUG_PORT          CDP port (default: 9222)");
-  console.log("  BROWSER             Browser to use (chrome, brave, comet, edge)");
+  console.log("  BROWSER             Browser to use (chrome, brave, edge)");
   console.log("  BROWSER_PATH        Custom browser executable path");
   console.log("");
   console.log("Examples:");
   console.log("  browser-cdp start brave");
   console.log("  browser-cdp nav https://google.com");
   console.log("  browser-cdp eval 'document.title'");
-  console.log("  browser-cdp screenshot");
+  console.log("  browser-cdp console --duration=10");
+  console.log("  browser-cdp insights --json");
   process.exit(0);
 }
 
