@@ -51,23 +51,23 @@ const BROWSERS = {
 const DEFAULT_PORT = 9222;
 
 function printUsage() {
-  console.log("Usage: start.js [browser] [--profile] [--port=PORT]");
+  console.log("Usage: start.js [browser] [--isolated] [--port=PORT]");
   console.log("\nBrowsers:");
   console.log("  chrome  - Google Chrome (default)");
   console.log("  brave   - Brave Browser");
   console.log("  comet   - Comet Browser");
   console.log("  edge    - Microsoft Edge");
   console.log("\nOptions:");
-  console.log("  --profile  Copy your browser profile (cookies, logins)");
-  console.log("  --port=N   Use custom debugging port (default: 9222)");
+  console.log("  --isolated  Use isolated profile (default: real profile)");
+  console.log("  --port=N    Use custom debugging port (default: 9222)");
   console.log("\nEnvironment variables:");
   console.log("  BROWSER       Default browser (chrome, brave, comet, edge)");
   console.log("  BROWSER_PATH  Custom browser executable path");
   console.log("  DEBUG_PORT    Custom debugging port");
   console.log("\nExamples:");
-  console.log("  start.js                    # Start Chrome with fresh profile");
-  console.log("  start.js brave --profile    # Start Brave with your profile");
-  console.log("  start.js comet              # Start Comet");
+  console.log("  start.js                    # Start Chrome with real profile");
+  console.log("  start.js brave              # Start Brave with real profile");
+  console.log("  start.js comet --isolated   # Start Comet with isolated profile");
   console.log("  start.js --port=9333        # Start Chrome on port 9333");
   process.exit(1);
 }
@@ -75,14 +75,14 @@ function printUsage() {
 // Parse arguments
 const args = process.argv.slice(2);
 let browserName = process.env.BROWSER || "chrome";
-let useProfile = false;
+let isolated = false;
 let port = parseInt(process.env.DEBUG_PORT) || DEFAULT_PORT;
 
 for (const arg of args) {
   if (arg === "--help" || arg === "-h") {
     printUsage();
-  } else if (arg === "--profile") {
-    useProfile = true;
+  } else if (arg === "--isolated") {
+    isolated = true;
   } else if (arg.startsWith("--port=")) {
     port = parseInt(arg.split("=")[1]);
   } else if (BROWSERS[arg]) {
@@ -137,28 +137,22 @@ try {
   }
 }
 
-// Setup profile directory
-const cacheBase = isMac
-  ? `${process.env.HOME}/Library/Caches`
-  : `${process.env.HOME}/.cache`;
-const profileDir = `${cacheBase}/browser-cdp/${browserName}`;
-execFileSync("mkdir", ["-p", profileDir], { stdio: "ignore" });
+// Build browser arguments
+const browserArgs = [`--remote-debugging-port=${port}`];
 
-if (useProfile && browserConfig.profileSource) {
-  console.log(`Syncing profile from ${browserConfig.profileSource}...`);
-  try {
-    execFileSync("rsync", ["-a", "--delete", browserConfig.profileSource, `${profileDir}/`], {
-      stdio: "pipe",
-    });
-  } catch {
-    console.warn("Warning: Could not sync profile, using fresh profile");
-  }
+if (isolated) {
+  const cacheBase = isMac
+    ? `${process.env.HOME}/Library/Caches`
+    : `${process.env.HOME}/.cache`;
+  const profileDir = `${cacheBase}/browser-cdp/${browserName}`;
+  execFileSync("mkdir", ["-p", profileDir], { stdio: "ignore" });
+  browserArgs.push(`--user-data-dir=${profileDir}`);
 }
 
 // Start browser
-console.log(`Starting ${browserConfig.name} on port ${port}...`);
+console.log(`Starting ${browserConfig.name} on port ${port}${isolated ? " (isolated)" : ""}...`);
 
-spawn(browserPath, [`--remote-debugging-port=${port}`, `--user-data-dir=${profileDir}`], {
+spawn(browserPath, browserArgs, {
   detached: true,
   stdio: "ignore",
 }).unref();
@@ -181,6 +175,4 @@ if (!connected) {
   process.exit(1);
 }
 
-console.log(
-  `${browserConfig.name} started on :${port}${useProfile ? " with your profile" : ""}`
-);
+console.log(`${browserConfig.name} started on :${port}${isolated ? " (isolated)" : ""}`);

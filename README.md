@@ -12,7 +12,7 @@ npm install -g browser-cdp
 
 ```bash
 # Start browser with CDP enabled
-browser-cdp start [browser] [--profile] [--port=PORT]
+browser-cdp start [browser] [--isolated] [--port=PORT]
 
 # Navigate to URL
 browser-cdp nav <url> [--new]
@@ -38,8 +38,8 @@ browser-cdp pick '<message>'
 ## Examples
 
 ```bash
-# Start Brave with your profile
-browser-cdp start brave --profile
+# Start Brave with real profile
+browser-cdp start brave
 
 # Start Chrome on custom port
 DEBUG_PORT=9333 browser-cdp start
@@ -74,12 +74,12 @@ browser-cdp nav https://example.com
 
 ## Supported Browsers
 
-| Browser | Command | Profile Support |
-|---------|---------|-----------------|
-| Chrome | `chrome` (default) | Yes |
-| Brave | `brave` | Yes |
-| Comet | `comet` | No |
-| Edge | `edge` | Yes |
+| Browser | Command |
+|---------|---------|
+| Chrome | `chrome` (default) |
+| Brave | `brave` |
+| Comet | `comet` |
+| Edge | `edge` |
 
 ## Platform Support
 
@@ -97,7 +97,7 @@ Use `BROWSER_PATH` env var to override if your browser is installed elsewhere.
 | Aspect | browser-cdp | Playwright Test Mode |
 |--------|-------------|---------------------|
 | Browser | Your installed Chrome/Brave/etc | Bundled Chromium |
-| Profile | Can use real cookies/logins | Fresh test profile |
+| Profile | Real cookies/logins by default | Fresh test profile |
 | Detection | Not detectable as automation | Automation flags present |
 | Use case | Real-world testing, scraping | Isolated E2E tests |
 

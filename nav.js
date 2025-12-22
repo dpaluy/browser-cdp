@@ -4,14 +4,19 @@ import { chromium } from "playwright";
 
 const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
 
-const url = process.argv[2];
+let url = process.argv[2];
 const newTab = process.argv[3] === "--new";
+
+// Add protocol if missing
+if (url && !url.match(/^https?:\/\//i)) {
+  url = "https://" + url;
+}
 
 if (!url) {
   console.log("Usage: nav.js <url> [--new]");
   console.log("\nExamples:");
-  console.log("  nav.js https://example.com       # Navigate current tab");
-  console.log("  nav.js https://example.com --new # Open in new tab");
+  console.log("  nav.js example.com       # Navigate current tab");
+  console.log("  nav.js example.com --new # Open in new tab");
   process.exit(1);
 }
 

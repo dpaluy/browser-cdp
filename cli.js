@@ -17,7 +17,7 @@ function printUsage() {
   console.log("Usage: browser-cdp <command> [options]");
   console.log("");
   console.log("Commands:");
-  console.log("  start [browser]     Start browser with CDP enabled");
+  console.log("  start [browser]     Start browser with CDP (uses real profile)");
   console.log("  nav <url>           Navigate to URL");
   console.log("  eval '<code>'       Evaluate JavaScript in page");
   console.log("  screenshot          Take screenshot of current page");
@@ -29,7 +29,7 @@ function printUsage() {
   console.log("  BROWSER_PATH        Custom browser executable path");
   console.log("");
   console.log("Examples:");
-  console.log("  browser-cdp start brave --profile");
+  console.log("  browser-cdp start brave");
   console.log("  browser-cdp nav https://google.com");
   console.log("  browser-cdp eval 'document.title'");
   console.log("  browser-cdp screenshot");
