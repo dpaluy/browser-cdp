@@ -23,7 +23,12 @@ if (!context) {
 }
 
 const pages = context.pages();
-const page = pages[pages.length - 1];
+// Filter out devtools pages and pick a real page
+const realPages = pages.filter(p => {
+  const url = p.url();
+  return url.startsWith("http://") || url.startsWith("https://");
+});
+const page = realPages[realPages.length - 1] || pages[pages.length - 1];
 
 if (!page) {
   console.error("No active tab found");

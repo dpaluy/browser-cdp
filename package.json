@@ -33,6 +33,7 @@
     "url": "https://github.com/dpaluy/browser-cdp/issues"
   },
   "dependencies": {
+    "lighthouse": "^13.0.1",
     "playwright": "^1.49.0"
   },
   "keywords": [

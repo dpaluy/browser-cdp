@@ -30,7 +30,12 @@ if (newTab) {
   console.log("Opened:", url);
 } else {
   const pages = context.pages();
-  const page = pages[pages.length - 1] || await context.newPage();
+  // Filter out devtools pages and pick a real page
+  const realPages = pages.filter(p => {
+    const url = p.url();
+    return url.startsWith("http://") || url.startsWith("https://") || url === "about:blank";
+  });
+  const page = realPages[realPages.length - 1] || pages[pages.length - 1] || await context.newPage();
   await page.goto(url, { waitUntil: "domcontentloaded" });
   console.log("Navigated to:", url);
 }

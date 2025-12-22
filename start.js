@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn, execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { platform } from "node:os";
 import { chromium } from "playwright";
 
@@ -44,24 +44,53 @@ const BROWSERS = {
 
 const DEFAULT_PORT = 9222;
 
+// Resolve profile name to directory (supports both "Profile 1" and "Suppli" style names)
+function resolveProfileDir(profileSource, profileName) {
+  // If it looks like a directory name already, use it
+  if (profileName === "Default" || profileName.startsWith("Profile ")) {
+    return profileName;
+  }
+
+  // Try to find profile by name in Local State
+  if (profileSource) {
+    try {
+      const localStatePath = `${profileSource}Local State`;
+      const localState = JSON.parse(readFileSync(localStatePath, "utf8"));
+      const profiles = localState.profile?.info_cache || {};
+
+      for (const [dir, info] of Object.entries(profiles)) {
+        if (info.name?.toLowerCase() === profileName.toLowerCase()) {
+          return dir;
+        }
+      }
+    } catch {
+      // Fall through to return original name
+    }
+  }
+
+  return profileName;
+}
+
 function printUsage() {
-  console.log("Usage: start.js [browser] [--isolated] [--port=PORT]");
+  console.log("Usage: start.js [browser] [--profile=NAME] [--isolated] [--port=PORT]");
   console.log("\nBrowsers:");
   console.log("  chrome  - Google Chrome (default)");
   console.log("  brave   - Brave Browser");
   console.log("  edge    - Microsoft Edge");
   console.log("\nOptions:");
-  console.log("  --isolated  Use isolated profile (default: real profile)");
-  console.log("  --port=N    Use custom debugging port (default: 9222)");
+  console.log("  --profile=NAME  Use specific profile by name or directory");
+  console.log("  --isolated      Use isolated profile (default: real profile)");
+  console.log("  --port=N        Use custom debugging port (default: 9222)");
   console.log("\nEnvironment variables:");
   console.log("  BROWSER       Default browser (chrome, brave, edge)");
   console.log("  BROWSER_PATH  Custom browser executable path");
   console.log("  DEBUG_PORT    Custom debugging port");
   console.log("\nExamples:");
-  console.log("  start.js                    # Start Chrome with real profile");
-  console.log("  start.js brave              # Start Brave with real profile");
-  console.log("  start.js edge --isolated    # Start Edge with isolated profile");
-  console.log("  start.js --port=9333        # Start Chrome on port 9333");
+  console.log("  start.js                           # Start Chrome with default profile");
+  console.log("  start.js brave                     # Start Brave with default profile");
+  console.log("  start.js brave --profile=Work      # Start Brave with 'Work' profile");
+  console.log("  start.js edge --isolated           # Start Edge with isolated profile");
+  console.log("  start.js --port=9333               # Start Chrome on port 9333");
   process.exit(1);
 }
 
@@ -69,6 +98,7 @@ function printUsage() {
 const args = process.argv.slice(2);
 let browserName = process.env.BROWSER || "chrome";
 let isolated = false;
+let profile = null;
 let port = parseInt(process.env.DEBUG_PORT) || DEFAULT_PORT;
 
 for (const arg of args) {
@@ -76,6 +106,8 @@ for (const arg of args) {
     printUsage();
   } else if (arg === "--isolated") {
     isolated = true;
+  } else if (arg.startsWith("--profile=")) {
+    profile = arg.split("=")[1];
   } else if (arg.startsWith("--port=")) {
     port = parseInt(arg.split("=")[1]);
   } else if (BROWSERS[arg]) {
@@ -155,7 +187,11 @@ if (!isolated && browserConfig.process) {
 }
 
 // Build browser arguments
-const browserArgs = [`--remote-debugging-port=${port}`];
+const browserArgs = [
+  `--remote-debugging-port=${port}`,
+  // Required for Lighthouse/CDP debugger access (prevents bfcache blocking)
+  "--disable-features=ProcessPerSiteUpToMainFrameThreshold",
+];
 
 if (isolated) {
   const cacheBase = isMac
@@ -164,10 +200,15 @@ if (isolated) {
   const profileDir = `${cacheBase}/browser-cdp/${browserName}`;
   execFileSync("mkdir", ["-p", profileDir], { stdio: "ignore" });
   browserArgs.push(`--user-data-dir=${profileDir}`);
+} else if (profile) {
+  // Resolve profile name to directory if needed
+  const profileDir = resolveProfileDir(browserConfig.profileSource, profile);
+  browserArgs.push(`--profile-directory=${profileDir}`);
 }
 
 // Start browser
-console.log(`Starting ${browserConfig.name} on port ${port}${isolated ? " (isolated)" : ""}...`);
+const profileInfo = isolated ? " (isolated)" : profile ? ` (${profile})` : "";
+console.log(`Starting ${browserConfig.name} on port ${port}${profileInfo}...`);
 
 spawn(browserPath, browserArgs, {
   detached: true,
@@ -192,4 +233,4 @@ if (!connected) {
   process.exit(1);
 }
 
-console.log(`${browserConfig.name} started on :${port}${isolated ? " (isolated)" : ""}`);
+console.log(`${browserConfig.name} started on :${port}${profileInfo}`);

@@ -12,12 +12,14 @@ const args = process.argv.slice(3);
 
 const commands = {
   start: "./start.js",
+  close: "./close.js",
   nav: "./nav.js",
   eval: "./eval.js",
   screenshot: "./screenshot.js",
   pick: "./pick.js",
   console: "./console.js",
   insights: "./insights.js",
+  lighthouse: "./lighthouse.js",
 };
 
 function printUsage() {
@@ -27,12 +29,14 @@ function printUsage() {
   console.log("");
   console.log("Commands:");
   console.log("  start [browser]     Start browser with CDP (uses real profile)");
+  console.log("  close               Close the browser");
   console.log("  nav <url>           Navigate to URL");
   console.log("  eval '<code>'       Evaluate JavaScript in page");
   console.log("  screenshot          Take screenshot of current page");
   console.log("  pick '<message>'    Interactive element picker");
   console.log("  console             Stream browser console output");
   console.log("  insights            Show page performance metrics");
+  console.log("  lighthouse          Run Lighthouse audit");
   console.log("");
   console.log("Environment:");
   console.log("  DEBUG_PORT          CDP port (default: 9222)");
