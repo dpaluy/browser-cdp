@@ -15,6 +15,7 @@ const commands = {
   close: "./close.js",
   nav: "./nav.js",
   eval: "./eval.js",
+  dom: "./dom.js",
   screenshot: "./screenshot.js",
   pick: "./pick.js",
   console: "./console.js",
@@ -30,8 +31,9 @@ function printUsage() {
   console.log("Commands:");
   console.log("  start [browser]     Start browser with CDP (uses real profile)");
   console.log("  close               Close the browser");
-  console.log("  nav <url>           Navigate to URL");
-  console.log("  eval '<code>'       Evaluate JavaScript in page");
+  console.log("  nav <url>           Navigate to URL (--console to capture logs)");
+  console.log("  eval '<code>'       Evaluate JS in page (--console to capture logs)");
+  console.log("  dom                 Capture full page DOM/HTML");
   console.log("  screenshot          Take screenshot of current page");
   console.log("  pick '<message>'    Interactive element picker");
   console.log("  console             Stream browser console output");
@@ -47,6 +49,7 @@ function printUsage() {
   console.log("  browser-cdp start brave");
   console.log("  browser-cdp nav https://google.com");
   console.log("  browser-cdp eval 'document.title'");
+  console.log("  browser-cdp dom > page.html");
   console.log("  browser-cdp console --duration=10");
   console.log("  browser-cdp insights --json");
   process.exit(0);

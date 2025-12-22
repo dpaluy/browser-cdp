@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2025-12-21
+
+### Added
+
+- `dom` command - Capture full page DOM/HTML
+- `--console` flag for `nav` command - Capture console output during navigation
+  - Sets up CDP listeners before navigating, captures load-time errors
+  - `--duration=N` option (default: 5s)
+- `--console` flag for `eval` command - Capture console output during JS evaluation
+  - Useful for debugging async operations, fetch calls, etc.
+  - `--duration=N` option (default: 3s)
+
 ## [0.3.0] - 2025-12-21
 
 ### Added
