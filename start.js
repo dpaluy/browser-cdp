@@ -137,6 +137,30 @@ try {
   }
 }
 
+// Check if browser is already running without CDP (only matters for real profile)
+if (!isolated && browserConfig.process) {
+  try {
+    const pgrepArgs = isMac
+      ? ["-x", browserConfig.process]
+      : ["-f", browserConfig.path];
+    const result = execFileSync("pgrep", pgrepArgs, { encoding: "utf8" }).trim();
+    if (result) {
+      console.error(`Error: ${browserConfig.name} is already running without CDP enabled.`);
+      console.error("");
+      console.error("When a browser is already open, launching it again just opens a new");
+      console.error("window in the existing process - the CDP flag is ignored.");
+      console.error("");
+      console.error("Options:");
+      console.error(`  1. Quit ${browserConfig.name} and run this command again`);
+      console.error(`  2. Use --isolated flag: browser-cdp start ${browserName} --isolated`);
+      console.error("     (creates separate instance, but without your cookies/logins)");
+      process.exit(1);
+    }
+  } catch {
+    // pgrep returns non-zero if no match - browser not running, proceed
+  }
+}
+
 // Build browser arguments
 const browserArgs = [`--remote-debugging-port=${port}`];
 

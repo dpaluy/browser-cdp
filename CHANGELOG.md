@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-12-21
+
+### Fixed
+
+- Detect when browser is already running without CDP and show helpful error with options
+
 ## [0.2.0] - 2024-12-21
 
 ### Changed
