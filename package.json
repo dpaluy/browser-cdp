@@ -7,17 +7,15 @@
     "browser-cdp": "./cli.js"
   },
   "scripts": {
-    "start": "node cli.js"
+    "start": "node cli.js",
+    "test": "node --test 'tests/*.test.js'",
+    "test:unit": "node --test tests/utils.test.js",
+    "test:integration": "node --test tests/commands.test.js",
+    "test:watch": "node --test --watch tests/"
   },
   "files": [
     "cli.js",
-    "start.js",
-    "nav.js",
-    "eval.js",
-    "screenshot.js",
-    "pick.js",
-    "console.js",
-    "insights.js",
+    "src/",
     "README.md",
     "LICENSE"
   ],

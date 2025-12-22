@@ -1,75 +1,9 @@
 #!/usr/bin/env node
 
 import { spawn, execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { platform } from "node:os";
+import { existsSync } from "node:fs";
 import { chromium } from "playwright";
-
-const isMac = platform() === "darwin";
-const isLinux = platform() === "linux";
-
-// Browser configurations per platform
-const BROWSERS = {
-  chrome: {
-    name: "Google Chrome",
-    path: isMac
-      ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-      : "/usr/bin/google-chrome",
-    process: "Google Chrome",
-    profileSource: isMac
-      ? `${process.env.HOME}/Library/Application Support/Google/Chrome/`
-      : `${process.env.HOME}/.config/google-chrome/`,
-  },
-  brave: {
-    name: "Brave",
-    path: isMac
-      ? "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
-      : "/usr/bin/brave-browser",
-    process: "Brave Browser",
-    profileSource: isMac
-      ? `${process.env.HOME}/Library/Application Support/BraveSoftware/Brave-Browser/`
-      : `${process.env.HOME}/.config/BraveSoftware/Brave-Browser/`,
-  },
-  edge: {
-    name: "Microsoft Edge",
-    path: isMac
-      ? "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
-      : "/usr/bin/microsoft-edge",
-    process: "Microsoft Edge",
-    profileSource: isMac
-      ? `${process.env.HOME}/Library/Application Support/Microsoft Edge/`
-      : `${process.env.HOME}/.config/microsoft-edge/`,
-  },
-};
-
-const DEFAULT_PORT = 9222;
-
-// Resolve profile name to directory (supports both "Profile 1" and "Suppli" style names)
-function resolveProfileDir(profileSource, profileName) {
-  // If it looks like a directory name already, use it
-  if (profileName === "Default" || profileName.startsWith("Profile ")) {
-    return profileName;
-  }
-
-  // Try to find profile by name in Local State
-  if (profileSource) {
-    try {
-      const localStatePath = `${profileSource}Local State`;
-      const localState = JSON.parse(readFileSync(localStatePath, "utf8"));
-      const profiles = localState.profile?.info_cache || {};
-
-      for (const [dir, info] of Object.entries(profiles)) {
-        if (info.name?.toLowerCase() === profileName.toLowerCase()) {
-          return dir;
-        }
-      }
-    } catch {
-      // Fall through to return original name
-    }
-  }
-
-  return profileName;
-}
+import { BROWSERS, DEFAULT_PORT, isMac, resolveProfileDir } from "./utils.js";
 
 function printUsage() {
   console.log("Usage: start.js [browser] [--profile=NAME] [--isolated] [--port=PORT]");
@@ -94,12 +28,11 @@ function printUsage() {
   process.exit(1);
 }
 
-// Parse arguments
 const args = process.argv.slice(2);
 let browserName = process.env.BROWSER || "chrome";
 let isolated = false;
 let profile = null;
-let port = parseInt(process.env.DEBUG_PORT) || DEFAULT_PORT;
+let port = DEFAULT_PORT;
 
 for (const arg of args) {
   if (arg === "--help" || arg === "-h") {
@@ -119,7 +52,6 @@ for (const arg of args) {
   }
 }
 
-// Resolve browser config
 const browserPath = process.env.BROWSER_PATH || BROWSERS[browserName]?.path;
 const browserConfig = BROWSERS[browserName] || {
   name: "Custom",
@@ -186,7 +118,6 @@ if (!isolated && browserConfig.process) {
   }
 }
 
-// Build browser arguments
 const browserArgs = [
   `--remote-debugging-port=${port}`,
   // Required for Lighthouse/CDP debugger access (prevents bfcache blocking)
@@ -206,7 +137,6 @@ if (isolated) {
   browserArgs.push(`--profile-directory=${profileDir}`);
 }
 
-// Start browser
 const profileInfo = isolated ? " (isolated)" : profile ? ` (${profile})` : "";
 console.log(`Starting ${browserConfig.name} on port ${port}${profileInfo}...`);
 
@@ -215,7 +145,6 @@ spawn(browserPath, browserArgs, {
   stdio: "ignore",
 }).unref();
 
-// Wait for browser to be ready
 let connected = false;
 for (let i = 0; i < 30; i++) {
   try {

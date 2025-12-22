@@ -11,16 +11,16 @@ const command = process.argv[2];
 const args = process.argv.slice(3);
 
 const commands = {
-  start: "./start.js",
-  close: "./close.js",
-  nav: "./nav.js",
-  eval: "./eval.js",
-  dom: "./dom.js",
-  screenshot: "./screenshot.js",
-  pick: "./pick.js",
-  console: "./console.js",
-  insights: "./insights.js",
-  lighthouse: "./lighthouse.js",
+  start: "./src/start.js",
+  close: "./src/close.js",
+  nav: "./src/nav.js",
+  eval: "./src/eval.js",
+  dom: "./src/dom.js",
+  screenshot: "./src/screenshot.js",
+  pick: "./src/pick.js",
+  console: "./src/console.js",
+  insights: "./src/insights.js",
+  lighthouse: "./src/lighthouse.js",
 };
 
 function printUsage() {

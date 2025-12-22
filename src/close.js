@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import WebSocket from "ws";
-
-const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
+import { DEFAULT_PORT } from "./utils.js";
 
 try {
   // Use CDP Browser.close to actually quit the browser

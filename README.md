@@ -137,6 +137,25 @@ Use `BROWSER_PATH` env var to override if your browser is installed elsewhere.
 | Detection | Not detectable as automation | Automation flags present |
 | Use case | Real-world testing, scraping | Isolated E2E tests |
 
+## Development
+
+```bash
+# Install dependencies
+bun install
+
+# Run all tests
+bun run test
+
+# Run unit tests only (fast, no browser needed)
+bun run test:unit
+
+# Run integration tests (requires browser)
+bun run test:integration
+
+# Watch mode
+bun run test:watch
+```
+
 ## See Also
 
 - [dev-browser](https://github.com/SawyerHood/dev-browser) - Browser automation plugin for Claude Code with LLM-optimized DOM snapshots

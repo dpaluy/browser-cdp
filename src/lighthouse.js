@@ -2,8 +2,7 @@
 
 import lighthouse from "lighthouse";
 import { chromium } from "playwright";
-
-const DEFAULT_PORT = process.env.DEBUG_PORT || 9222;
+import { DEFAULT_PORT } from "./utils.js";
 
 const args = process.argv.slice(2);
 const showHelp = args.includes("--help") || args.includes("-h");
