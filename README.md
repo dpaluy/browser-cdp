@@ -12,7 +12,10 @@ npm install -g browser-cdp
 
 ```bash
 # Start browser with CDP enabled
-browser-cdp start [browser] [--isolated] [--port=PORT]
+browser-cdp start [browser] [--profile=NAME] [--isolated] [--port=PORT]
+
+# Close the browser
+browser-cdp close
 
 # Navigate to URL
 browser-cdp nav <url> [--new]
@@ -26,11 +29,14 @@ browser-cdp screenshot
 # Interactive element picker
 browser-cdp pick '<message>'
 
-# Stream browser console output
+# Stream browser console output (network errors, exceptions, logs)
 browser-cdp console [--duration=SECONDS]
 
 # Show page performance metrics
 browser-cdp insights [--json]
+
+# Run Lighthouse audit (Chrome only)
+browser-cdp lighthouse [--json] [--category=NAME]
 ```
 
 ## Environment Variables
@@ -47,6 +53,9 @@ browser-cdp insights [--json]
 # Start Brave with real profile
 browser-cdp start brave
 
+# Start Brave with specific profile (by name)
+browser-cdp start brave --profile=Work
+
 # Start Chrome on custom port
 DEBUG_PORT=9333 browser-cdp start
 
@@ -61,15 +70,25 @@ browser-cdp screenshot
 # Pick elements interactively
 browser-cdp pick "Select the login button"
 
-# Stream console output for 10 seconds
+# Stream console output (captures network errors, exceptions, console.log)
+browser-cdp console
+# Then refresh the page to see errors
+
+# Stream console for 10 seconds
 browser-cdp console --duration=10
 
 # Get page performance insights
 browser-cdp insights
 # Returns: TTFB, First Paint, FCP, DOM loaded, resources, memory
 
-# Get insights as JSON
-browser-cdp insights --json
+# Run Lighthouse audit (Chrome only - Brave blocks CDP debugger)
+browser-cdp start chrome --isolated
+browser-cdp nav https://example.com
+browser-cdp lighthouse
+# Returns: Performance, Accessibility, Best Practices, SEO scores
+
+# Close browser when done
+browser-cdp close
 ```
 
 ## Pre-started Browser
