@@ -135,6 +135,10 @@ Use `BROWSER_PATH` env var to override if your browser is installed elsewhere.
 | Detection | Not detectable as automation | Automation flags present |
 | Use case | Real-world testing, scraping | Isolated E2E tests |
 
+## See Also
+
+- [dev-browser](https://github.com/SawyerHood/dev-browser) - Browser automation plugin for Claude Code with LLM-optimized DOM snapshots
+
 ## License
 
 MIT
