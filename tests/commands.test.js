@@ -1,7 +1,9 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert";
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const PORT = "9333";
 const CLI = "./cli.js";
@@ -120,6 +122,46 @@ describe("browser-cdp commands", { skip: process.env.SKIP_INTEGRATION }, () => {
       const filepath = result.trim();
       assert.match(filepath, /\.png$/);
       assert.ok(existsSync(filepath), `Screenshot file not found: ${filepath}`);
+    });
+  });
+
+  describe("pdf command", () => {
+    test("creates PDF file in temp directory", () => {
+      run(["nav", "https://example.com"]);
+      const result = run(["pdf"]);
+      const filepath = result.trim();
+      assert.match(filepath, /\.pdf$/);
+      assert.ok(existsSync(filepath), `PDF file not found: ${filepath}`);
+      const content = readFileSync(filepath);
+      assert.strictEqual(content.slice(0, 4).toString(), "%PDF");
+    });
+
+    test("creates PDF with custom path", () => {
+      const outputPath = join(tmpdir(), `test-output-${Date.now()}.pdf`);
+      run(["nav", "https://example.com"]);
+      run(["pdf", "--path", outputPath]);
+      assert.ok(existsSync(outputPath), `PDF not found at custom path: ${outputPath}`);
+      unlinkSync(outputPath);
+    });
+
+    test("accepts paper format option", () => {
+      run(["nav", "https://example.com"]);
+      const result = run(["pdf", "--format", "A4"]);
+      assert.ok(existsSync(result.trim()));
+    });
+
+    test("accepts landscape orientation", () => {
+      run(["nav", "https://example.com"]);
+      const result = run(["pdf", "--landscape"]);
+      assert.ok(existsSync(result.trim()));
+    });
+
+    test("shows help with --help flag", () => {
+      const result = run(["pdf", "--help"]);
+      assert.match(result, /Usage:/);
+      assert.match(result, /--path/);
+      assert.match(result, /--format/);
+      assert.match(result, /--landscape/);
     });
   });
 

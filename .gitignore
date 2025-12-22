@@ -8,3 +8,4 @@ AGENTS.md
 .agents.yml
 .agents.local.yml
 bun.lock
+docs/plans/*

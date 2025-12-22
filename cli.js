@@ -17,6 +17,7 @@ const commands = {
   eval: "./src/eval.js",
   dom: "./src/dom.js",
   screenshot: "./src/screenshot.js",
+  pdf: "./src/pdf.js",
   pick: "./src/pick.js",
   console: "./src/console.js",
   insights: "./src/insights.js",
@@ -35,6 +36,7 @@ function printUsage() {
   console.log("  eval '<code>'       Evaluate JS in page (--console to capture logs)");
   console.log("  dom                 Capture full page DOM/HTML");
   console.log("  screenshot          Take screenshot of current page");
+  console.log("  pdf                 Export current page as PDF");
   console.log("  pick '<message>'    Interactive element picker");
   console.log("  console             Stream browser console output");
   console.log("  insights            Show page performance metrics");
