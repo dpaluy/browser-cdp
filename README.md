@@ -1,6 +1,6 @@
 # browser-cdp
 
-Browser automation via Chrome DevTools Protocol. Control Chrome, Brave, Comet, or Edge using your real browser - same fingerprint, real cookies, no automation detection.
+Browser automation via Chrome DevTools Protocol. Control Chrome, Brave, or Edge using your real browser - same fingerprint, real cookies, no automation detection.
 
 ## Install
 
@@ -25,6 +25,12 @@ browser-cdp screenshot
 
 # Interactive element picker
 browser-cdp pick '<message>'
+
+# Stream browser console output
+browser-cdp console [--duration=SECONDS]
+
+# Show page performance metrics
+browser-cdp insights [--json]
 ```
 
 ## Environment Variables
@@ -32,7 +38,7 @@ browser-cdp pick '<message>'
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `DEBUG_PORT` | CDP debugging port | `9222` |
-| `BROWSER` | Browser to use (chrome, brave, comet, edge) | `chrome` |
+| `BROWSER` | Browser to use (chrome, brave, edge) | `chrome` |
 | `BROWSER_PATH` | Custom browser executable path | (auto-detect) |
 
 ## Examples
@@ -54,6 +60,16 @@ browser-cdp screenshot
 
 # Pick elements interactively
 browser-cdp pick "Select the login button"
+
+# Stream console output for 10 seconds
+browser-cdp console --duration=10
+
+# Get page performance insights
+browser-cdp insights
+# Returns: TTFB, First Paint, FCP, DOM loaded, resources, memory
+
+# Get insights as JSON
+browser-cdp insights --json
 ```
 
 ## Pre-started Browser
@@ -78,7 +94,6 @@ browser-cdp nav https://example.com
 |---------|---------|
 | Chrome | `chrome` (default) |
 | Brave | `brave` |
-| Comet | `comet` |
 | Edge | `edge` |
 
 ## Platform Support
