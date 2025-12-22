@@ -1,0 +1,186 @@
+#!/usr/bin/env node
+
+import { spawn, execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { platform } from "node:os";
+import { chromium } from "playwright";
+
+const isMac = platform() === "darwin";
+const isLinux = platform() === "linux";
+
+// Browser configurations per platform
+const BROWSERS = {
+  chrome: {
+    name: "Google Chrome",
+    path: isMac
+      ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+      : "/usr/bin/google-chrome",
+    process: "Google Chrome",
+    profileSource: isMac
+      ? `${process.env.HOME}/Library/Application Support/Google/Chrome/`
+      : `${process.env.HOME}/.config/google-chrome/`,
+  },
+  brave: {
+    name: "Brave",
+    path: isMac
+      ? "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+      : "/usr/bin/brave-browser",
+    process: "Brave Browser",
+    profileSource: isMac
+      ? `${process.env.HOME}/Library/Application Support/BraveSoftware/Brave-Browser/`
+      : `${process.env.HOME}/.config/BraveSoftware/Brave-Browser/`,
+  },
+  comet: {
+    name: "Comet",
+    path: isMac ? "/Applications/Comet.app/Contents/MacOS/Comet" : "/usr/bin/comet",
+    process: "Comet",
+    profileSource: null,
+  },
+  edge: {
+    name: "Microsoft Edge",
+    path: isMac
+      ? "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+      : "/usr/bin/microsoft-edge",
+    process: "Microsoft Edge",
+    profileSource: isMac
+      ? `${process.env.HOME}/Library/Application Support/Microsoft Edge/`
+      : `${process.env.HOME}/.config/microsoft-edge/`,
+  },
+};
+
+const DEFAULT_PORT = 9222;
+
+function printUsage() {
+  console.log("Usage: start.js [browser] [--profile] [--port=PORT]");
+  console.log("\nBrowsers:");
+  console.log("  chrome  - Google Chrome (default)");
+  console.log("  brave   - Brave Browser");
+  console.log("  comet   - Comet Browser");
+  console.log("  edge    - Microsoft Edge");
+  console.log("\nOptions:");
+  console.log("  --profile  Copy your browser profile (cookies, logins)");
+  console.log("  --port=N   Use custom debugging port (default: 9222)");
+  console.log("\nEnvironment variables:");
+  console.log("  BROWSER       Default browser (chrome, brave, comet, edge)");
+  console.log("  BROWSER_PATH  Custom browser executable path");
+  console.log("  DEBUG_PORT    Custom debugging port");
+  console.log("\nExamples:");
+  console.log("  start.js                    # Start Chrome with fresh profile");
+  console.log("  start.js brave --profile    # Start Brave with your profile");
+  console.log("  start.js comet              # Start Comet");
+  console.log("  start.js --port=9333        # Start Chrome on port 9333");
+  process.exit(1);
+}
+
+// Parse arguments
+const args = process.argv.slice(2);
+let browserName = process.env.BROWSER || "chrome";
+let useProfile = false;
+let port = parseInt(process.env.DEBUG_PORT) || DEFAULT_PORT;
+
+for (const arg of args) {
+  if (arg === "--help" || arg === "-h") {
+    printUsage();
+  } else if (arg === "--profile") {
+    useProfile = true;
+  } else if (arg.startsWith("--port=")) {
+    port = parseInt(arg.split("=")[1]);
+  } else if (BROWSERS[arg]) {
+    browserName = arg;
+  } else if (!arg.startsWith("--")) {
+    console.error(`Unknown browser: ${arg}`);
+    console.log(`Available: ${Object.keys(BROWSERS).join(", ")}`);
+    process.exit(1);
+  }
+}
+
+// Resolve browser config
+const browserPath = process.env.BROWSER_PATH || BROWSERS[browserName]?.path;
+const browserConfig = BROWSERS[browserName] || {
+  name: "Custom",
+  path: browserPath,
+  process: null,
+  profileSource: null,
+};
+
+if (!browserPath) {
+  console.error("No browser path specified");
+  printUsage();
+}
+
+if (!existsSync(browserPath)) {
+  console.error(`Browser not found: ${browserPath}`);
+  process.exit(1);
+}
+
+// Check if port is available or has a browser with CDP
+try {
+  const response = await fetch(`http://localhost:${port}/json/version`);
+  if (response.ok) {
+    // CDP endpoint responded - browser already running
+    console.log(`Browser already running on :${port}`);
+    process.exit(0);
+  } else {
+    // Port occupied by non-CDP process
+    console.error(`Error: Port ${port} is in use by another process (not a browser with CDP)`);
+    console.error(`Try a different port: ./start.js --port=9333`);
+    process.exit(1);
+  }
+} catch (err) {
+  if (err.cause?.code === "ECONNREFUSED") {
+    // Port is free, proceed to start browser
+  } else {
+    // Port occupied but not responding to CDP
+    console.error(`Error: Port ${port} is in use by another process`);
+    console.error(`Try a different port: ./start.js --port=9333`);
+    process.exit(1);
+  }
+}
+
+// Setup profile directory
+const cacheBase = isMac
+  ? `${process.env.HOME}/Library/Caches`
+  : `${process.env.HOME}/.cache`;
+const profileDir = `${cacheBase}/browser-cdp/${browserName}`;
+execFileSync("mkdir", ["-p", profileDir], { stdio: "ignore" });
+
+if (useProfile && browserConfig.profileSource) {
+  console.log(`Syncing profile from ${browserConfig.profileSource}...`);
+  try {
+    execFileSync("rsync", ["-a", "--delete", browserConfig.profileSource, `${profileDir}/`], {
+      stdio: "pipe",
+    });
+  } catch {
+    console.warn("Warning: Could not sync profile, using fresh profile");
+  }
+}
+
+// Start browser
+console.log(`Starting ${browserConfig.name} on port ${port}...`);
+
+spawn(browserPath, [`--remote-debugging-port=${port}`, `--user-data-dir=${profileDir}`], {
+  detached: true,
+  stdio: "ignore",
+}).unref();
+
+// Wait for browser to be ready
+let connected = false;
+for (let i = 0; i < 30; i++) {
+  try {
+    const browser = await chromium.connectOverCDP(`http://localhost:${port}`);
+    await browser.close();
+    connected = true;
+    break;
+  } catch {
+    await new Promise((r) => setTimeout(r, 500));
+  }
+}
+
+if (!connected) {
+  console.error(`Failed to connect to ${browserConfig.name} on port ${port}`);
+  process.exit(1);
+}
+
+console.log(
+  `${browserConfig.name} started on :${port}${useProfile ? " with your profile" : ""}`
+);

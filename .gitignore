@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+*.log
+.DS_Store
+.claude
+CLAUDE.md
+AGENTS.md
+.agents.yml
+.agents.local.yml

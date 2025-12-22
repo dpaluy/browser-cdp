@@ -1,0 +1,47 @@
+{
+  "name": "browser-cdp",
+  "version": "0.1.0",
+  "description": "Browser automation via Chrome DevTools Protocol - control Chrome, Brave, Comet, Edge with real browser profiles",
+  "type": "module",
+  "bin": {
+    "browser-cdp": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "files": [
+    "cli.js",
+    "start.js",
+    "nav.js",
+    "eval.js",
+    "screenshot.js",
+    "pick.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dpaluy/browser-cdp.git"
+  },
+  "homepage": "https://github.com/dpaluy/browser-cdp#readme",
+  "bugs": {
+    "url": "https://github.com/dpaluy/browser-cdp/issues"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "keywords": [
+    "browser",
+    "automation",
+    "cdp",
+    "chrome",
+    "brave",
+    "playwright",
+    "devtools"
+  ],
+  "author": "Majestic Labs",
+  "license": "MIT"
+}
