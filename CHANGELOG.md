@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2025-12-22
+
+### Added
+
+- `pdf` command - Export current page as PDF
+  - `--path <file>` option for custom output location
+  - `--format <format>` option for paper size (A4, Letter, Legal, Tabloid)
+  - `--landscape` flag for landscape orientation
+
 ## [0.5.1] - 2025-12-22
 
 ### Added

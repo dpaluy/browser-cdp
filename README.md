@@ -28,6 +28,9 @@ browser-cdp eval '<code>'
 # Take screenshot
 browser-cdp screenshot
 
+# Export page as PDF
+browser-cdp pdf [--path=FILE] [--format=A4|Letter|Legal|Tabloid] [--landscape]
+
 # Interactive element picker
 browser-cdp pick '<message>'
 
@@ -68,6 +71,13 @@ browser-cdp eval 'document.querySelector("textarea").value = "hello"'
 # Take screenshot
 browser-cdp screenshot
 # Returns: /tmp/screenshot-2024-01-01T12-00-00.png
+
+# Export page as PDF
+browser-cdp pdf
+# Returns: /tmp/pdf-2024-01-01T12-00-00.pdf
+
+# Export to specific file in A4 landscape
+browser-cdp pdf --path report.pdf --format A4 --landscape
 
 # Pick elements interactively
 browser-cdp pick "Select the login button"
