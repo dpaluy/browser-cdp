@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.3] - 2025-12-22
+
+### Added
+
+- `cookies` command - Export/import/clear browser cookies for session persistence
+  - `export` subcommand - Save cookies to JSON file for later use
+  - `import` subcommand - Load cookies from JSON file into browser
+  - `clear` subcommand - Delete all cookies from browser
+  - `--path=<file>` option for export (default: cookies.json)
+  - Useful for resuming authenticated sessions across browser restarts
+
 ## [0.6.2] - 2025-12-22
 
 ### Added

@@ -1,7 +1,7 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert";
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readFileSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -247,6 +247,62 @@ describe("browser-cdp commands", { skip: process.env.SKIP_INTEGRATION }, () => {
     });
   });
 
+
+  describe("cookies command", () => {
+    test("shows help with --help flag", () => {
+      const result = run(["cookies", "--help"]);
+      assert.match(result, /Usage:/);
+      assert.match(result, /export/);
+      assert.match(result, /import/);
+      assert.match(result, /clear/);
+    });
+
+    test("exports cookies to default file", () => {
+      run(["nav", "https://example.com"]);
+      const result = run(["cookies", "export"]);
+      assert.match(result, /Exported.*cookie/i);
+      assert.ok(existsSync("cookies.json"));
+      const content = JSON.parse(readFileSync("cookies.json", "utf8"));
+      assert.ok(Array.isArray(content));
+      unlinkSync("cookies.json");
+    });
+
+    test("exports cookies to custom path", () => {
+      const timestamp = Date.now();
+      const outputPath = join(tmpdir(), `test-cookies-${timestamp}.json`);
+      run(["nav", "https://example.com"]);
+      run(["cookies", "export", "--path", outputPath]);
+      assert.ok(existsSync(outputPath));
+      const content = JSON.parse(readFileSync(outputPath, "utf8"));
+      assert.ok(Array.isArray(content));
+      unlinkSync(outputPath);
+    });
+
+    test("imports cookies from file", () => {
+      const timestamp = Date.now();
+      const cookieFile = join(tmpdir(), `test-import-${timestamp}.json`);
+      const testCookies = [
+        {
+          name: "test_cookie",
+          value: "test_value",
+          domain: "example.com",
+          path: "/",
+        },
+      ];
+      writeFileSync(cookieFile, JSON.stringify(testCookies));
+
+      run(["nav", "https://example.com"]);
+      const result = run(["cookies", "import", cookieFile]);
+      assert.match(result, /Imported.*cookie/i);
+      unlinkSync(cookieFile);
+    });
+
+    test("clears all cookies", () => {
+      run(["nav", "https://example.com"]);
+      const result = run(["cookies", "clear"]);
+      assert.match(result, /Cleared all cookies/i);
+    });
+  });
   describe("CLI basics", () => {
     test("shows version with --version", () => {
       const result = run(["--version"]);
