@@ -3,12 +3,22 @@
 import { chromium } from "playwright";
 import { DEFAULT_PORT, getActivePage } from "./utils.js";
 
-const message = process.argv.slice(2).join(" ");
-if (!message) {
-  console.log("Usage: pick.js 'message'");
+const args = process.argv.slice(2);
+const jsonOutput = args.includes("--json");
+const showHelp = args.includes("--help") || args.includes("-h");
+
+// Filter out flags from message
+const messageArgs = args.filter((a) => !a.startsWith("--"));
+const message = messageArgs.join(" ");
+
+if (showHelp || !message) {
+  console.log("Usage: pick.js [options] 'message'");
+  console.log("\nOptions:");
+  console.log("  --json    Output selected element(s) as JSON");
   console.log("\nExample:");
   console.log('  pick.js "Click the submit button"');
-  process.exit(1);
+  console.log('  pick.js --json "Select the product link"');
+  process.exit(!message ? 1 : 0);
 }
 
 const browser = await chromium.connectOverCDP(`http://localhost:${DEFAULT_PORT}`);
@@ -143,19 +153,23 @@ await page.evaluate(() => {
 
 const result = await page.evaluate((msg) => window.pick(msg), message);
 
-if (Array.isArray(result)) {
-  for (let i = 0; i < result.length; i++) {
-    if (i > 0) console.log("");
-    for (const [key, value] of Object.entries(result[i])) {
+if (jsonOutput) {
+  console.log(JSON.stringify(result, null, 2));
+} else {
+  if (Array.isArray(result)) {
+    for (let i = 0; i < result.length; i++) {
+      if (i > 0) console.log("");
+      for (const [key, value] of Object.entries(result[i])) {
+        console.log(`${key}: ${value}`);
+      }
+    }
+  } else if (typeof result === "object" && result !== null) {
+    for (const [key, value] of Object.entries(result)) {
       console.log(`${key}: ${value}`);
     }
+  } else {
+    console.log(result);
   }
-} else if (typeof result === "object" && result !== null) {
-  for (const [key, value] of Object.entries(result)) {
-    console.log(`${key}: ${value}`);
-  }
-} else {
-  console.log(result);
 }
 
 await browser.close();
