@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.4] - 2025-12-22
+
+### Added
+
+- `storage` command - Manage localStorage and sessionStorage
+  - `get <key>` - Retrieve value for a key
+  - `set <key> <value>` - Store key-value pair (supports multi-word values)
+  - `list` - List all storage keys
+  - `clear` - Clear all storage
+  - `export` - Export storage to JSON file
+  - `import <file>` - Import storage from JSON file
+  - `--session` flag to use sessionStorage instead of localStorage
+  - `--path <file>` option for custom export file path
+
 ## [0.6.3] - 2025-12-22
 
 ### Added

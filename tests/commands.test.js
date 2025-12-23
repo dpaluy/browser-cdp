@@ -303,6 +303,116 @@ describe("browser-cdp commands", { skip: process.env.SKIP_INTEGRATION }, () => {
       assert.match(result, /Cleared all cookies/i);
     });
   });
+  describe("storage command", () => {
+    test("shows help with --help flag", () => {
+      const result = run(["storage", "--help"]);
+      assert.match(result, /Usage:/);
+      assert.match(result, /get/);
+      assert.match(result, /set/);
+      assert.match(result, /list/);
+      assert.match(result, /clear/);
+      assert.match(result, /export/);
+      assert.match(result, /import/);
+      assert.match(result, /--session/);
+    });
+
+    test("sets and gets value", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "set", "testKey", "testValue"]);
+      const result = run(["storage", "get", "testKey"]);
+      assert.strictEqual(result.trim(), "testValue");
+    });
+
+    test("sets and gets multi-word value", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "set", "message", "hello", "world"]);
+      const result = run(["storage", "get", "message"]);
+      assert.strictEqual(result.trim(), "hello world");
+    });
+
+    test("lists storage keys", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "clear"]);
+      run(["storage", "set", "key1", "value1"]);
+      run(["storage", "set", "key2", "value2"]);
+      const result = run(["storage", "list"]);
+      assert.match(result, /Keys in localStorage:/);
+      assert.match(result, /key1/);
+      assert.match(result, /key2/);
+    });
+
+    test("clears storage", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "set", "clearMe", "value"]);
+      run(["storage", "clear"]);
+      const result = run(["storage", "list"]);
+      assert.match(result, /No keys found/);
+    });
+
+    test("exports storage to default file", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "clear"]);
+      run(["storage", "set", "exportKey", "exportValue"]);
+      const result = run(["storage", "export"]);
+      assert.match(result, /Exported.*item/i);
+      assert.ok(existsSync("storage.json"));
+      const content = JSON.parse(readFileSync("storage.json", "utf8"));
+      assert.strictEqual(content.exportKey, "exportValue");
+      unlinkSync("storage.json");
+    });
+
+    test("exports storage to custom path", () => {
+      const timestamp = Date.now();
+      const outputPath = join(tmpdir(), `test-storage-${timestamp}.json`);
+      run(["nav", "https://example.com"]);
+      run(["storage", "clear"]);
+      run(["storage", "set", "customKey", "customValue"]);
+      run(["storage", "export", "--path", outputPath]);
+      assert.ok(existsSync(outputPath));
+      const content = JSON.parse(readFileSync(outputPath, "utf8"));
+      assert.strictEqual(content.customKey, "customValue");
+      unlinkSync(outputPath);
+    });
+
+    test("imports storage from file", () => {
+      const timestamp = Date.now();
+      const importFile = join(tmpdir(), `test-import-storage-${timestamp}.json`);
+      const testData = { importedKey: "importedValue" };
+      writeFileSync(importFile, JSON.stringify(testData));
+
+      run(["nav", "https://example.com"]);
+      run(["storage", "clear"]);
+      const result = run(["storage", "import", importFile]);
+      assert.match(result, /Imported.*item/i);
+
+      const getValue = run(["storage", "get", "importedKey"]);
+      assert.strictEqual(getValue.trim(), "importedValue");
+      unlinkSync(importFile);
+    });
+
+    test("uses sessionStorage with --session flag", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "clear", "--session"]);
+      run(["storage", "set", "sessionKey", "sessionValue", "--session"]);
+      const result = run(["storage", "get", "sessionKey", "--session"]);
+      assert.strictEqual(result.trim(), "sessionValue");
+
+      const listResult = run(["storage", "list", "--session"]);
+      assert.match(listResult, /Keys in sessionStorage:/);
+    });
+
+    test("returns error for missing key", () => {
+      run(["nav", "https://example.com"]);
+      run(["storage", "clear"]);
+      try {
+        run(["storage", "get", "nonexistent"]);
+        assert.fail("Should have thrown");
+      } catch (e) {
+        assert.match(e.stderr || e.message, /not found/);
+      }
+    });
+  });
+
   describe("CLI basics", () => {
     test("shows version with --version", () => {
       const result = run(["--version"]);
