@@ -1,6 +1,6 @@
 {
   "name": "browser-cdp",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Browser automation via Chrome DevTools Protocol - control Chrome, Brave, Edge with real browser profiles",
   "type": "module",
   "bin": {

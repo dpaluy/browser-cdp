@@ -22,6 +22,7 @@ const commands = {
   console: "./src/console.js",
   network: "./src/network.js",
   cookies: "./src/cookies.js",
+  storage: "./src/storage.js",
   insights: "./src/insights.js",
   lighthouse: "./src/lighthouse.js",
 };
@@ -43,6 +44,7 @@ function printUsage() {
   console.log("  console             Stream browser console output");
   console.log("  network             Stream network requests/responses");
   console.log("  cookies             Export/import/clear browser cookies");
+  console.log("  storage             Manage localStorage/sessionStorage");
   console.log("  insights            Show page performance metrics");
   console.log("  lighthouse          Run Lighthouse audit");
   console.log("");

@@ -45,6 +45,15 @@ browser-cdp cookies export [--path=FILE]
 browser-cdp cookies import <file>
 browser-cdp cookies clear
 
+# Manage localStorage/sessionStorage
+browser-cdp storage get <key>
+browser-cdp storage set <key> <value>
+browser-cdp storage list
+browser-cdp storage clear
+browser-cdp storage export [--path=FILE]
+browser-cdp storage import <file>
+# Add --session for sessionStorage instead of localStorage
+
 # Show page performance metrics
 browser-cdp insights [--json]
 
@@ -123,6 +132,20 @@ browser-cdp cookies import session.json
 # Clear all cookies
 browser-cdp cookies clear
 
+# Get/set localStorage values
+browser-cdp storage get authToken
+browser-cdp storage set theme dark
+
+# List all storage keys
+browser-cdp storage list
+
+# Export/import storage
+browser-cdp storage export
+browser-cdp storage import storage.json
+
+# Work with sessionStorage
+browser-cdp storage get tempData --session
+
 # Get page performance insights
 browser-cdp insights
 # Returns: TTFB, First Paint, FCP, DOM loaded, resources, memory
@@ -186,6 +209,57 @@ Delete all cookies from the browser:
 ```bash
 browser-cdp cookies clear
 ```
+
+## Storage Command
+
+The `storage` command provides localStorage and sessionStorage management:
+
+### Get/Set Values
+
+```bash
+browser-cdp storage get authToken                 # Get from localStorage
+browser-cdp storage set theme dark                # Set in localStorage
+browser-cdp storage set tempData "session" --session  # Set in sessionStorage
+```
+
+### List Keys
+
+```bash
+browser-cdp storage list                          # List localStorage keys
+browser-cdp storage list --session                # List sessionStorage keys
+```
+
+### Export/Import
+
+Save storage to a JSON file for backup or restore:
+
+```bash
+browser-cdp storage export                        # Saves to storage.json
+browser-cdp storage export --path app-state.json  # Save to specific file
+browser-cdp storage import app-state.json         # Restore from file
+```
+
+Output format:
+```json
+{
+  "authToken": "eyJhbGciOiJIUzI1NiIs...",
+  "theme": "dark"
+}
+```
+
+### Clear Storage
+
+```bash
+browser-cdp storage clear                         # Clear localStorage
+browser-cdp storage clear --session               # Clear sessionStorage
+```
+
+### localStorage vs sessionStorage
+
+| Storage Type | Lifetime | Scope | Flag |
+|--------------|----------|-------|------|
+| localStorage | Permanent | Per origin | (default) |
+| sessionStorage | Tab session | Per tab | `--session` |
 
 ## Pre-started Browser
 
