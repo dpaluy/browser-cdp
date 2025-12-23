@@ -8,6 +8,7 @@ const args = process.argv.slice(2);
 const subcommand = args[0];
 const showHelp = args.includes("--help") || args.includes("-h");
 const useSessionStorage = args.includes("--session");
+const jsonOutput = args.includes("--json");
 const storageType = useSessionStorage ? "sessionStorage" : "localStorage";
 
 function printUsage() {
@@ -24,12 +25,15 @@ function printUsage() {
   console.log("Options:");
   console.log("  --session             Use sessionStorage instead of localStorage");
   console.log("  --path <file>         Output file path for export (default: storage.json)");
+  console.log("  --json                Output as JSON to stdout (get, list, export)");
   console.log("");
   console.log("Examples:");
   console.log("  storage get token");
   console.log("  storage set theme dark");
   console.log("  storage list");
+  console.log("  storage list --json");
   console.log("  storage export");
+  console.log("  storage export --json");
   console.log("  storage export --path session.json --session");
   console.log("  storage import session.json");
   console.log("  storage clear");
@@ -83,7 +87,11 @@ if (subcommand === "get") {
     process.exit(1);
   }
 
-  console.log(result);
+  if (jsonOutput) {
+    console.log(JSON.stringify({ key, value: result }));
+  } else {
+    console.log(result);
+  }
 } else if (subcommand === "set") {
   const key = positionalArgs[1];
   const value = positionalArgs.slice(2).join(" ");
@@ -100,12 +108,21 @@ if (subcommand === "get") {
 
   console.log(`Set ${key} in ${storageType}`);
 } else if (subcommand === "list") {
-  const keys = await page.evaluate(
-    (storageType) => Object.keys(window[storageType]),
-    storageType
-  );
+  const data = await page.evaluate((storageType) => {
+    const storage = window[storageType];
+    const result = {};
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      result[key] = storage.getItem(key);
+    }
+    return result;
+  }, storageType);
 
-  if (keys.length === 0) {
+  const keys = Object.keys(data);
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(data, null, 2));
+  } else if (keys.length === 0) {
     console.log(`No keys found in ${storageType}`);
   } else {
     console.log(`Keys in ${storageType}:`);
@@ -117,7 +134,7 @@ if (subcommand === "get") {
   console.log(`Cleared all ${storageType}`);
 } else if (subcommand === "export") {
   const pathIdx = args.findIndex((a) => a === "--path");
-  const outputFile = pathIdx !== -1 ? args[pathIdx + 1] : "storage.json";
+  const outputFile = pathIdx !== -1 ? args[pathIdx + 1] : null;
 
   const data = await page.evaluate((storageType) => {
     const storage = window[storageType];
@@ -129,9 +146,14 @@ if (subcommand === "get") {
     return result;
   }, storageType);
 
-  writeFileSync(outputFile, JSON.stringify(data, null, 2));
-  const count = Object.keys(data).length;
-  console.log(`Exported ${count} item(s) from ${storageType} to ${outputFile}`);
+  if (jsonOutput) {
+    console.log(JSON.stringify(data, null, 2));
+  } else {
+    const file = outputFile || "storage.json";
+    writeFileSync(file, JSON.stringify(data, null, 2));
+    const count = Object.keys(data).length;
+    console.log(`Exported ${count} item(s) from ${storageType} to ${file}`);
+  }
 } else if (subcommand === "import") {
   const importFile = positionalArgs[1];
 

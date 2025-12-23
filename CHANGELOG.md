@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.5] - 2025-12-22
+
+### Added
+
+- `--json` flag across commands for machine-readable output
+  - `console --json` - Stream logs as newline-delimited JSON
+  - `cookies export --json` - Output cookies to stdout as JSON
+  - `pick --json` - Output selected element(s) as JSON
+  - `storage get/list/export --json` - Output storage data as JSON
+  - Enables piping to `jq` for filtering and transformation
+
 ## [0.6.4] - 2025-12-22
 
 ### Added

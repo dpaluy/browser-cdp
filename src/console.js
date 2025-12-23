@@ -7,6 +7,7 @@ const args = process.argv.slice(2);
 const duration = args.find((a) => a.startsWith("--duration="));
 const durationMs = duration ? parseInt(duration.split("=")[1]) * 1000 : null;
 const shouldReload = args.includes("--reload") || args.includes("-r");
+const jsonOutput = args.includes("--json");
 const showHelp = args.includes("--help") || args.includes("-h");
 
 if (showHelp) {
@@ -15,10 +16,12 @@ if (showHelp) {
   console.log("\nOptions:");
   console.log("  --duration=N  Stop after N seconds (default: run until Ctrl+C)");
   console.log("  --reload, -r  Reload the page before capturing");
+  console.log("  --json        Output as JSON for piping");
   console.log("\nExamples:");
   console.log("  console.js              # Stream console logs until Ctrl+C");
   console.log("  console.js --duration=5 # Capture for 5 seconds");
   console.log("  console.js --reload     # Reload page and capture logs");
+  console.log("  console.js --json       # JSON output for jq/parsing");
   process.exit(0);
 }
 
@@ -39,18 +42,33 @@ if (!page) {
   process.exit(1);
 }
 
-console.error(`Connected to: ${page.url()}`);
+if (!jsonOutput) {
+  console.error(`Connected to: ${page.url()}`);
+}
 
 // Use CDP directly for Log domain (captures network errors, etc.)
 const cdp = await page.context().newCDPSession(page);
 await cdp.send("Log.enable");
 
 cdp.on("Log.entryAdded", ({ entry }) => {
-  const color = levelColors[entry.level] || levelColors.info;
-  const source = entry.source ? `[${entry.source}]` : "";
-  console.log(`${color}[${formatTime()}] [${entry.level.toUpperCase()}]${source} ${entry.text}${resetColor}`);
-  if (entry.url) {
-    console.log(`${color}    URL: ${entry.url}${resetColor}`);
+  if (jsonOutput) {
+    console.log(
+      JSON.stringify({
+        type: "log",
+        timestamp: new Date().toISOString(),
+        level: entry.level,
+        source: entry.source || null,
+        text: entry.text,
+        url: entry.url || null,
+      })
+    );
+  } else {
+    const color = levelColors[entry.level] || levelColors.info;
+    const source = entry.source ? `[${entry.source}]` : "";
+    console.log(`${color}[${formatTime()}] [${entry.level.toUpperCase()}]${source} ${entry.text}${resetColor}`);
+    if (entry.url) {
+      console.log(`${color}    URL: ${entry.url}${resetColor}`);
+    }
   }
 });
 
@@ -58,34 +76,82 @@ cdp.on("Log.entryAdded", ({ entry }) => {
 await cdp.send("Runtime.enable");
 cdp.on("Runtime.exceptionThrown", ({ exceptionDetails }) => {
   const text = exceptionDetails.exception?.description || exceptionDetails.text;
-  console.log(`\x1b[31m[${formatTime()}] [EXCEPTION] ${text}${resetColor}`);
+  if (jsonOutput) {
+    console.log(
+      JSON.stringify({
+        type: "exception",
+        timestamp: new Date().toISOString(),
+        level: "error",
+        text,
+      })
+    );
+  } else {
+    console.log(`\x1b[31m[${formatTime()}] [EXCEPTION] ${text}${resetColor}`);
+  }
 });
 
 // Capture network failures (ERR_BLOCKED_BY_CLIENT, etc.)
 await cdp.send("Network.enable");
 cdp.on("Network.loadingFailed", ({ requestId, errorText, blockedReason }) => {
   const reason = blockedReason ? ` (${blockedReason})` : "";
-  console.log(`\x1b[31m[${formatTime()}] [NETWORK ERROR] ${errorText}${reason}${resetColor}`);
+  if (jsonOutput) {
+    console.log(
+      JSON.stringify({
+        type: "network-error",
+        timestamp: new Date().toISOString(),
+        level: "error",
+        text: errorText + reason,
+      })
+    );
+  } else {
+    console.log(`\x1b[31m[${formatTime()}] [NETWORK ERROR] ${errorText}${reason}${resetColor}`);
+  }
 });
 
 // Keep Playwright listeners for console.log() calls
 page.on("console", (msg) => {
   const type = msg.type();
-  const color = levelColors[type] || levelColors.info;
-  const text = msg.text();
-  console.log(`${color}[${formatTime()}] [CONSOLE.${type.toUpperCase()}] ${text}${resetColor}`);
+  if (jsonOutput) {
+    console.log(
+      JSON.stringify({
+        type: "console",
+        timestamp: new Date().toISOString(),
+        level: type,
+        text: msg.text(),
+      })
+    );
+  } else {
+    const color = levelColors[type] || levelColors.info;
+    const text = msg.text();
+    console.log(`${color}[${formatTime()}] [CONSOLE.${type.toUpperCase()}] ${text}${resetColor}`);
+  }
 });
 
 page.on("pageerror", (error) => {
-  console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${resetColor}`);
+  if (jsonOutput) {
+    console.log(
+      JSON.stringify({
+        type: "page-error",
+        timestamp: new Date().toISOString(),
+        level: "error",
+        text: error.message,
+      })
+    );
+  } else {
+    console.log(`\x1b[31m[${formatTime()}] [PAGE ERROR] ${error.message}${resetColor}`);
+  }
 });
 
 if (shouldReload) {
-  console.error("Reloading page...");
+  if (!jsonOutput) {
+    console.error("Reloading page...");
+  }
   await page.reload();
 }
 
-console.error(`Listening for console output... (Ctrl+C to stop)`);
+if (!jsonOutput) {
+  console.error(`Listening for console output... (Ctrl+C to stop)`);
+}
 
 if (durationMs) {
   await new Promise((r) => setTimeout(r, durationMs));
@@ -93,7 +159,9 @@ if (durationMs) {
 } else {
   // Keep running until interrupted
   process.on("SIGINT", async () => {
-    console.error("\nStopping...");
+    if (!jsonOutput) {
+      console.error("\nStopping...");
+    }
     await browser.close();
     process.exit(0);
   });

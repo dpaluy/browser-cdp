@@ -6,6 +6,7 @@ import { DEFAULT_PORT, getActivePage } from "./utils.js";
 
 const args = process.argv.slice(2);
 const subcommand = args[0];
+const jsonOutput = args.includes("--json");
 const showHelp = args.includes("--help") || args.includes("-h");
 
 function printUsage() {
@@ -18,10 +19,12 @@ function printUsage() {
   console.log("");
   console.log("Options:");
   console.log("  --path <file>         Output file path for export (default: cookies.json)");
+  console.log("  --json                Output as JSON to stdout");
   console.log("");
   console.log("Examples:");
   console.log("  cookies export");
   console.log("  cookies export --path session.json");
+  console.log("  cookies export --json                 # JSON to stdout");
   console.log("  cookies import session.json");
   console.log("  cookies clear");
   process.exit(0);
@@ -58,11 +61,20 @@ const cdp = await page.context().newCDPSession(page);
 
 if (subcommand === "export") {
   const pathIdx = args.findIndex((a) => a === "--path");
-  const outputFile = pathIdx !== -1 ? args[pathIdx + 1] : "cookies.json";
+  const outputFile = pathIdx !== -1 ? args[pathIdx + 1] : null;
 
   const { cookies } = await cdp.send("Network.getCookies");
-  writeFileSync(outputFile, JSON.stringify(cookies, null, 2));
-  console.log(`Exported ${cookies.length} cookie(s) to ${outputFile}`);
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(cookies, null, 2));
+  } else if (outputFile) {
+    writeFileSync(outputFile, JSON.stringify(cookies, null, 2));
+    console.log(`Exported ${cookies.length} cookie(s) to ${outputFile}`);
+  } else {
+    const defaultFile = "cookies.json";
+    writeFileSync(defaultFile, JSON.stringify(cookies, null, 2));
+    console.log(`Exported ${cookies.length} cookie(s) to ${defaultFile}`);
+  }
 } else if (subcommand === "import") {
   const importFile = args[1];
 

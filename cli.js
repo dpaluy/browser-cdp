@@ -40,12 +40,12 @@ function printUsage() {
   console.log("  dom                 Capture full page DOM/HTML");
   console.log("  screenshot          Take screenshot of current page");
   console.log("  pdf                 Export current page as PDF");
-  console.log("  pick '<message>'    Interactive element picker");
-  console.log("  console             Stream browser console output");
-  console.log("  network             Stream network requests/responses");
-  console.log("  cookies             Export/import/clear browser cookies");
-  console.log("  storage             Manage localStorage/sessionStorage");
-  console.log("  insights            Show page performance metrics");
+  console.log("  pick '<message>'    Interactive element picker (--json for JSON output)");
+  console.log("  console             Stream browser console output (--json for JSON output)");
+  console.log("  network             Stream network requests/responses (--json for JSON output)");
+  console.log("  cookies             Export/import/clear browser cookies (--json for JSON export)");
+  console.log("  storage             Manage localStorage/sessionStorage (--json for JSON output)");
+  console.log("  insights            Show page performance metrics (--json for JSON output)");
   console.log("  lighthouse          Run Lighthouse audit");
   console.log("");
   console.log("Environment:");
@@ -58,9 +58,11 @@ function printUsage() {
   console.log("  browser-cdp nav https://google.com");
   console.log("  browser-cdp eval 'document.title'");
   console.log("  browser-cdp dom > page.html");
-  console.log("  browser-cdp console --duration=10");
-  console.log("  browser-cdp network --filter=api");
-  console.log("  browser-cdp cookies export --path session.json");
+  console.log("  browser-cdp console --duration=10 --json");
+  console.log("  browser-cdp network --filter=api --json");
+  console.log("  browser-cdp cookies export --json");
+  console.log("  browser-cdp storage list --json");
+  console.log("  browser-cdp pick 'Click submit' --json");
   console.log("  browser-cdp insights --json");
   process.exit(0);
 }
