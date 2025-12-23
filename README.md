@@ -40,6 +40,11 @@ browser-cdp console [--duration=SECONDS]
 # Stream network requests/responses
 browser-cdp network [--filter=PATTERN] [--json] [--errors] [--duration=SECONDS]
 
+# Manage cookies (export/import/clear)
+browser-cdp cookies export [--path=FILE]
+browser-cdp cookies import <file>
+browser-cdp cookies clear
+
 # Show page performance metrics
 browser-cdp insights [--json]
 
@@ -105,6 +110,19 @@ browser-cdp network --errors
 # JSON output for parsing
 browser-cdp network --json --duration=5 | jq '.url'
 
+# Export cookies to JSON file
+browser-cdp cookies export
+# Returns: cookies.json with all cookies
+
+# Export to custom file
+browser-cdp cookies export --path session.json
+
+# Import cookies from file
+browser-cdp cookies import session.json
+
+# Clear all cookies
+browser-cdp cookies clear
+
 # Get page performance insights
 browser-cdp insights
 # Returns: TTFB, First Paint, FCP, DOM loaded, resources, memory
@@ -117,6 +135,56 @@ browser-cdp lighthouse
 
 # Close browser when done
 browser-cdp close
+```
+
+## Cookies Command
+
+The `cookies` command provides session persistence for authenticated workflows:
+
+### Export Cookies
+
+Save your browser cookies to a JSON file for later use:
+
+```bash
+browser-cdp cookies export                    # Saves to cookies.json
+browser-cdp cookies export --path auth.json   # Save to specific file
+```
+
+Output format:
+```json
+[
+  {
+    "name": "session_id",
+    "value": "abc123...",
+    "domain": "example.com",
+    "path": "/",
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Strict",
+    "expires": 1735689600
+  }
+]
+```
+
+### Import Cookies
+
+Load previously exported cookies into the browser:
+
+```bash
+browser-cdp cookies import auth.json
+```
+
+Useful for:
+- Resuming authenticated sessions across browser restarts
+- Sharing sessions across team members
+- Preserving login state for automation workflows
+
+### Clear Cookies
+
+Delete all cookies from the browser:
+
+```bash
+browser-cdp cookies clear
 ```
 
 ## Pre-started Browser

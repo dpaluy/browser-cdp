@@ -21,6 +21,7 @@ const commands = {
   pick: "./src/pick.js",
   console: "./src/console.js",
   network: "./src/network.js",
+  cookies: "./src/cookies.js",
   insights: "./src/insights.js",
   lighthouse: "./src/lighthouse.js",
 };
@@ -41,6 +42,7 @@ function printUsage() {
   console.log("  pick '<message>'    Interactive element picker");
   console.log("  console             Stream browser console output");
   console.log("  network             Stream network requests/responses");
+  console.log("  cookies             Export/import/clear browser cookies");
   console.log("  insights            Show page performance metrics");
   console.log("  lighthouse          Run Lighthouse audit");
   console.log("");
@@ -56,6 +58,7 @@ function printUsage() {
   console.log("  browser-cdp dom > page.html");
   console.log("  browser-cdp console --duration=10");
   console.log("  browser-cdp network --filter=api");
+  console.log("  browser-cdp cookies export --path session.json");
   console.log("  browser-cdp insights --json");
   process.exit(0);
 }
